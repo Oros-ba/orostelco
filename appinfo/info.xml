@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>orostelco</id>
+	<name>Orostelco</name>
+	<summary>Telco OSS/BSS</summary>
+	<description>Orostelco is an GUI for telco OSS/BSS applications</description>
+	<version>0.0.1</version>
+	<licence>AGPL-3.0-or-later</licence>
+	<author homepage="https://github.com/mirzaAbazovic">Mirza Abazovic</author>
+	<namespace>Orostelco</namespace>
+	<category>organization</category>
+	<bugs>https://github.com/Oros-ba/orostelco/issues</bugs>
+	<repository type="git">https://github.com/Oros-ba/orostelco</repository>
+	<dependencies>
+		<nextcloud min-version="31" max-version="36"/>
+	</dependencies>
+</info>
