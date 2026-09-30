@@ -19,15 +19,13 @@ jobs:
   server:
     name: Nextcloud ${{ matrix.name }} / PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
-    # master is Nextcloud 35 until a stable35 branch exists
-    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { name: '33', server: stable33, php: '8.2', experimental: false }
-          - { name: '34', server: stable34, php: '8.3', experimental: false }
-          - { name: '35 (master)', server: master, php: '8.3', experimental: true }
+          - { name: '33', server: stable33, php: '8.2' }
+          - { name: '34', server: stable34, php: '8.2' }
+          - { name: '35', server: stable35, php: '8.3' }
 
     steps:
       - name: Checkout server
