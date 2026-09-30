@@ -145,10 +145,10 @@ Licensing/meta:
 
 ### 8. CI (GitHub Actions)
 - **Lint**: php-cs-fixer, psalm, eslint, stylelint, typecheck, reuse, openapi up-to-date, `info.xml` XSD validation.
-- **PHPUnit matrix**: Nextcloud `stable33`, `stable34`, `master` (35), with supported PHP versions each.
+- **PHPUnit matrix**: Nextcloud `stable33`, `stable34`, `stable35` (master is 36), with the PHP version each supports.
 - **Integration smoke** per Nextcloud version: install server, `occ app:enable orostelco`, request `/ocs/v2.php/apps/orostelco/ping` (expect 200 + `pong`), `occ app:disable`.
 - **Frontend**: `npm ci`, `npm run build`, vitest.
-- NC 35 may only exist as `master`; mark that job allowed-to-fail until a stable branch exists.
+- stable35 exists, so no allowed-to-fail job is needed.
 - Reuse the official Nextcloud workflow templates (`nextcloud/.github`) where possible.
 
 ### 9. Local development environment (standard Nextcloud way)
@@ -216,7 +216,7 @@ Rewrite `README.md` to describe the app:
 - Whether `/ping` should later test connectivity to the configured OrosTelco API.
 - Decided: the API endpoint and API key are **per instance**, configured by admins only (app-level `IAppConfig`, no per-user settings, no personal settings page). Per-user keys are out of scope.
 - App id/namespace (`orostelco` / `Orostelco`) should be confirmed final before first release.
-- docker-dev details (service names for stable containers, `ADDITIONAL_APPS_PATH`, hostnames, Windows/WSL2 behaviour, whether a `stable35`/master container matches NC 35) were only partly confirmed from its docs and must be verified by actually running the setup before the README is finalised.
+- docker-dev was run end to end for stable35 (Nextcloud 35.0.1) only; stable33 and stable34 use the same steps and are covered by the CI matrix but were not started locally.
 - docker-dev is explicitly insecure (default passwords); README must say it is for local development only.
 
 ## Suggested commits
@@ -230,3 +230,13 @@ Rewrite `README.md` to describe the app:
 8. `ci: lint, test and compatibility matrix workflows`
 9. `chore: Makefile dev targets and dev-setup script`
 10. `docs: README (app description, local development guide), CHANGELOG`
+
+## Implementation notes (deviations from the plan above)
+- **Nextcloud 35 is `stable35`, `master` is Nextcloud 36.** The CI matrix tests stable33, stable34, stable35 (PHP 8.2, 8.2, 8.3); master is not tested because info.xml max-version is 35.
+- **No `appinfo/routes.php`**: routes are declared with the `FrontpageRoute` and `ApiRoute` attributes (Nextcloud 29+).
+- **Settings API** uses camelCase JSON (`apiEndpoint`, `apiKeySet`, `apiKey`) and two write endpoints: `PUT /settings/endpoint` and `PUT /settings/key`, only the key one requires password confirmation. Storage keys stay `api_endpoint` and `api_key`.
+- **Local development** uses the shared folder `nextcloud-docker-dev/data/apps-extra/orostelco` (mounted in every container) instead of `workspace/server/apps-extra`, and the stable containers instead of `nextcloud`. bootstrap.sh needs sudo for /etc/hosts; ports 80/443 may be taken (`PROXY_PORT_HTTP`, `PROXY_PORT_HTTPS`).
+- **Rector** only runs on `lib/`: on `tests/` it removed `setUp()` methods and imports. Its `RemoveEmptyClassMethodRector` is skipped for `Application.php` (IBootstrap needs empty methods).
+- **Vite license extraction** (`extractLicenseInformation`) is disabled: it hung in "rendering chunks" on Windows. Follow-up: find out why and re-enable for app store builds.
+- **Tooling versions**: Psalm 6 (platform php 8.2.27), PHPUnit 10.5, Rector 2.6, ESLint 10 with `@nextcloud/eslint-config` 9, stylelint 17, Vite 7, Vitest 5 (threads pool), TypeScript 5.9, `@nextcloud/vue` 9.13. Node must be 24 (Node 26 makes npm resolve ancient library versions).
+- `openapi-administration.json` and `openapi-full.json` are generated next to `openapi.json` because the settings controller has the administration scope.
