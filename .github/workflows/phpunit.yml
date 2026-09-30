@@ -1,0 +1,120 @@
+# SPDX-FileCopyrightText: 2026 Mirza Abazovic
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: Nextcloud compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phpunit-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: Nextcloud ${{ matrix.name }} / PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    # master is Nextcloud 35 until a stable35 branch exists
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: '33', server: stable33, php: '8.2', experimental: false }
+          - { name: '34', server: stable34, php: '8.3', experimental: false }
+          - { name: '35 (master)', server: master, php: '8.3', experimental: true }
+
+    steps:
+      - name: Checkout server
+        uses: actions/checkout@v6
+        with:
+          repository: nextcloud/server
+          ref: ${{ matrix.server }}
+          submodules: true
+          persist-credentials: false
+          path: server
+
+      - name: Checkout app
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          path: server/apps/orostelco
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, sqlite, pdo_sqlite, xmlreader, xmlwriter, zip, zlib
+          coverage: none
+          ini-file: development
+          tools: composer
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: server/apps/orostelco/.nvmrc
+          cache: npm
+          cache-dependency-path: server/apps/orostelco/package-lock.json
+
+      - name: Build the app
+        working-directory: server/apps/orostelco
+        run: |
+          composer install --no-interaction --prefer-dist
+          npm ci
+          npm run build
+
+      - name: Install Nextcloud
+        working-directory: server
+        run: |
+          php occ maintenance:install --database sqlite --admin-user admin --admin-pass admin
+          php occ config:system:set debug --value=true --type=boolean
+          php occ config:system:set loglevel --value=0 --type=integer
+
+      - name: Enable the app
+        working-directory: server
+        run: php occ app:enable orostelco
+
+      - name: PHPUnit against the real server
+        working-directory: server/apps/orostelco
+        run: composer run test:unit
+
+      - name: Smoke test the REST API
+        working-directory: server
+        run: |
+          OC_PASS=alice-secret-1 php occ user:add --password-from-env --display-name=Alice alice
+          php -S 127.0.0.1:8080 -t . > /tmp/php-server.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/status.php > /dev/null && break; sleep 1; done
+
+          base=http://127.0.0.1:8080/ocs/v2.php/apps/orostelco
+          hdr='OCS-APIRequest: true'
+
+          echo "ping as a normal user returns pong"
+          curl -fsS -u alice:alice-secret-1 -H "$hdr" -H 'Accept: application/json' "$base/ping" | tee /tmp/ping.json
+          grep -q '"message":"pong"' /tmp/ping.json
+
+          echo "settings are admin only"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -u alice:alice-secret-1 -H "$hdr" -H 'Accept: application/json' "$base/settings")
+          test "$code" = 403
+
+          echo "admin can read settings and the key is not exposed"
+          curl -fsS -u admin:admin -H "$hdr" -H 'Accept: application/json' "$base/settings" | tee /tmp/settings.json
+          grep -q '"apiKeySet":false' /tmp/settings.json
+
+          echo "invalid endpoint is rejected"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -u admin:admin -H "$hdr" -H 'Accept: application/json' -X PUT --data-urlencode 'apiEndpoint=http://remote.example.com' "$base/settings/endpoint")
+          test "$code" = 400
+
+      - name: Disable the app again
+        working-directory: server
+        run: php occ app:disable orostelco
+
+      - name: No errors in nextcloud.log
+        working-directory: server
+        run: |
+          if grep -E '"level":[34]' data/nextcloud.log; then
+            echo 'errors found in nextcloud.log'
+            exit 1
+          fi
