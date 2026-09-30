@@ -124,7 +124,7 @@ jobs:
         working-directory: server
         run: |
           test -f data/nextcloud.log || { echo 'data/nextcloud.log is missing'; exit 1; }
-          if grep -E '"level":[34]' data/nextcloud.log; then
-            echo 'errors found in nextcloud.log'
+          if grep -E '"level":[34]' data/nextcloud.log | grep -i orostelco; then
+            echo 'orostelco related errors found in nextcloud.log (errors of other apps booted by the PHPUnit bootstrap are ignored)'
             exit 1
           fi
