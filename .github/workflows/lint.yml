@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: 2026 Mirza Abazovic
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: PHP (syntax, php-cs-fixer, psalm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, xmlreader, xmlwriter, zip, zlib
+          coverage: none
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Syntax
+        run: composer run lint
+
+      - name: Coding standard
+        run: composer run cs:check || ( echo 'Please run `composer run cs:fix` to format your code' && exit 1 )
+
+      - name: Static analysis
+        run: composer run psalm -- --monochrome --no-progress --output-format=github
+
+  openapi:
+    name: OpenAPI spec is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer
+
+      - run: composer install --no-interaction --prefer-dist
+
+      - name: Regenerate and compare
+        run: |
+          composer run openapi
+          git --no-pager diff --exit-code -- openapi.json openapi-administration.json openapi-full.json || ( echo 'Please run `composer run openapi` and commit the result' && exit 1 )
+
+  info-xml:
+    name: info.xml validates against the app store schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Validate
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends libxml2-utils
+          curl -fsSL https://apps.nextcloud.com/schema/apps/info.xsd -o info.xsd
+          xmllint --noout --schema info.xsd appinfo/info.xml
+
+  frontend:
+    name: JavaScript (eslint, stylelint, typecheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run stylelint
+      - run: npm run typecheck
+
+  reuse:
+    name: REUSE compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: fsfe/reuse-action@v5
