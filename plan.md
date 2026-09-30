@@ -107,17 +107,17 @@ Backend:
 - `lib/Service/ConfigService.php`: typed getters/setters; validates endpoint (`filter_var` URL, https required except localhost for dev, trailing slash normalised); key trimmed, non-empty.
 - `lib/Settings/Admin.php` (`ISettings`, renders a template that mounts the Vue admin component), `lib/Settings/AdminSection.php` (`IIconSection`, id `orostelco`, own icon).
 - `lib/Controller/SettingsController.php` (`OCSController`):
-  - `GET /settings` -> `{api_endpoint, api_key_set: bool}`. **Never returns the key.**
-  - `PUT /settings` -> accepts `api_endpoint` and optional `api_key` (omitted = unchanged); admin only (default, i.e. no `#[NoAdminRequired]`); `#[PasswordConfirmationRequired]` when changing the key.
+  - `GET /settings` -> `{apiEndpoint, apiKeySet: bool}`. **Never returns the key.**
+  - `PUT /settings/endpoint` (`apiEndpoint`) and `PUT /settings/key` (`apiKey`); admin only (default, i.e. no `#[NoAdminRequired]`); both carry `#[PasswordConfirmationRequired]` because the endpoint receives the key.
 - Tests: `ConfigServiceTest` (validation, key never exposed), `SettingsControllerTest`.
 
-Frontend (`src/settings/AdminSettings.vue`): `NcSettingsSection` with `NcTextField` (endpoint) and `NcPasswordField` (key, placeholder "already set" when `api_key_set`), Save button, `showSuccess`/`showError` toasts.
+Frontend (`src/components/AdminSettings.vue`): `NcSettingsSection` with `NcTextField` (endpoint) and `NcPasswordField` (key, placeholder "already set" when `apiKeySet`), Save button, `showSuccess`/`showError` toasts.
 CLI alternative documented: `occ config:app:set orostelco api_endpoint --value=...`.
 
 ### 6. Frontend (Vue 3)
 - `package.json`, `vite.config.ts` via `@nextcloud/vite-config` (entry points: `main` and `adminSettings`), `tsconfig.json`, `.nvmrc`, `engines`, browserslist from `@nextcloud/browserslist-config`.
 - `src/main.ts`, `src/App.vue`: heading, **"Ping" button** -> calls `/ping`, shows "pong at <time>" or an error state, disables the button while loading. Wrapped in `NcContent`/`NcAppContent`.
-- `src/settings/` entry as in step 5.
+- `src/adminSettings.ts` entry mounts `src/components/AdminSettings.vue`.
 - l10n: `@nextcloud/l10n` `t('orostelco', '...')` for all strings; `l10n/` directory.
 - Icons: `img/app.svg`, `img/app-dark.svg`.
 - Component test (vitest + @vue/test-utils): button click triggers a request and renders result (mock axios).
@@ -175,7 +175,7 @@ Developer flow to implement and document (verify each command against the curren
    docker compose exec nextcloud occ app:enable orostelco
    ```
 7. Edit loop: `npm run watch` (Vite rebuilds on change, reload the browser); PHP changes are live via the mount. Dev mode is on in docker-dev (`debug => true`), so stack traces and non-minified assets appear.
-8. Test against each supported version: use docker-dev's stable containers (git worktree of `stable33`, `stable34`; `master` = 35) as described in its "stable versions" docs, e.g. `docker compose up -d stable33` -> http://stable33.local, and run `occ app:enable orostelco` there.
+8. Test against each supported version: use docker-dev's stable containers (git worktrees of `stable33`, `stable34`, `stable35`; `master` is 36) as described in its "stable versions" docs, e.g. `docker compose up -d stable33` -> http://stable33.local, and run `occ app:enable orostelco` there.
 9. Run quality checks and tests: `make lint`, `make test`, or the individual composer/npm scripts from step 7; PHPUnit can run inside the container (`docker compose exec nextcloud` in the app folder) to use the real server.
 10. Debugging and logs: Xdebug (docker-dev "tools" docs, configure IDE to the container), logs via `docker compose exec nextcloud tail -f data/nextcloud.log`, `occ log:tail`.
 11. Reset: `docker compose down -v` wipes the dev instance.
@@ -240,3 +240,5 @@ Rewrite `README.md` to describe the app:
 - **Vite license extraction** (`extractLicenseInformation`) is disabled: it hung in "rendering chunks" on Windows. Follow-up: find out why and re-enable for app store builds.
 - **Tooling versions**: Psalm 6 (platform php 8.2.27), PHPUnit 10.5, Rector 2.6, ESLint 10 with `@nextcloud/eslint-config` 9, stylelint 17, Vite 7, Vitest 5 (threads pool), TypeScript 5.9, `@nextcloud/vue` 9.13. Node must be 24 (Node 26 makes npm resolve ancient library versions).
 - `openapi-administration.json` and `openapi-full.json` are generated next to `openapi.json` because the settings controller has the administration scope.
+- **Review follow-ups applied**: the admin form cannot save before the current settings loaded (it would have cleared the endpoint); `PUT /settings/endpoint` also requires password confirmation; endpoint validation additionally uses `filter_var`; the password dialog stylesheet is imported; the CI smoke test also checks a valid endpoint write and non-admin writes.
+- **Known limits**: a `http://localhost` endpoint is accepted by the validation, but Nextcloud's HTTP client only contacts local addresses when `allow_local_remote_servers` is true; `https` endpoints pointing to internal addresses are accepted (only admins can set them). Psalm runs against `nextcloud/ocp` stable33 only, the CI matrix covers 34 and 35 at runtime.

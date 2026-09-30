@@ -85,6 +85,7 @@ jobs:
           OC_PASS=alice-secret-1 php occ user:add --password-from-env --display-name=Alice alice
           php -S 127.0.0.1:8080 -t . > /tmp/php-server.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/status.php > /dev/null && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8080/status.php > /dev/null || { echo 'built-in server did not start'; cat /tmp/php-server.log; exit 1; }
 
           base=http://127.0.0.1:8080/ocs/v2.php/apps/orostelco
           hdr='OCS-APIRequest: true'
@@ -105,6 +106,16 @@ jobs:
           code=$(curl -s -o /dev/null -w '%{http_code}' -u admin:admin -H "$hdr" -H 'Accept: application/json' -X PUT --data-urlencode 'apiEndpoint=http://remote.example.com' "$base/settings/endpoint")
           test "$code" = 400
 
+          echo "valid endpoint is saved and normalized"
+          curl -fsS -u admin:admin -H "$hdr" -H 'Accept: application/json' -X PUT --data-urlencode 'apiEndpoint=https://api.example.com/' "$base/settings/endpoint" | tee /tmp/endpoint.json
+          grep -q '"apiEndpoint":"https:.*api.example.com"' /tmp/endpoint.json
+
+          echo "non admin cannot change the endpoint or the key"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -u alice:alice-secret-1 -H "$hdr" -H 'Accept: application/json' -X PUT --data-urlencode 'apiEndpoint=https://evil.example.com' "$base/settings/endpoint")
+          test "$code" = 403
+          code=$(curl -s -o /dev/null -w '%{http_code}' -u alice:alice-secret-1 -H "$hdr" -H 'Accept: application/json' -X PUT --data-urlencode 'apiKey=x' "$base/settings/key")
+          test "$code" = 403
+
       - name: Disable the app again
         working-directory: server
         run: php occ app:disable orostelco
@@ -112,6 +123,7 @@ jobs:
       - name: No errors in nextcloud.log
         working-directory: server
         run: |
+          test -f data/nextcloud.log || { echo 'data/nextcloud.log is missing'; exit 1; }
           if grep -E '"level":[34]' data/nextcloud.log; then
             echo 'errors found in nextcloud.log'
             exit 1

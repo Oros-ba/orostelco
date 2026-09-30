@@ -52,11 +52,12 @@ export async function getSettings(): Promise<Settings> {
 }
 
 /**
- * Save the OrosTelco API endpoint
+ * Save the OrosTelco API endpoint, asks for the password first (the endpoint receives the key)
  *
  * @param apiEndpoint absolute https URL (empty clears it)
  */
 export async function saveEndpoint(apiEndpoint: string): Promise<Settings> {
+	await confirmPassword()
 	const { data } = await axios.put<OcsResponse<Settings>>(url('/settings/endpoint'), { apiEndpoint }, { headers: OCS_HEADERS })
 	return data.ocs.data
 }

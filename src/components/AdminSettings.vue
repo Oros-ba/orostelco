@@ -18,12 +18,18 @@ const apiKey = ref('')
 const apiKeySet = ref(false)
 const saving = ref(false)
 const endpointError = ref('')
+// Saving is only possible once the current settings are known, otherwise an empty
+// form would overwrite (clear) the stored endpoint.
+const loaded = ref(false)
+const savedEndpoint = ref('')
 
 onMounted(async () => {
 	try {
 		const settings = await getSettings()
 		apiEndpoint.value = settings.apiEndpoint
+		savedEndpoint.value = settings.apiEndpoint
 		apiKeySet.value = settings.apiKeySet
+		loaded.value = true
 	} catch {
 		showError(t('orostelco', 'Could not load the settings'))
 	}
@@ -47,11 +53,16 @@ async function onSave() {
 	saving.value = true
 	endpointError.value = ''
 	try {
-		try {
-			await saveEndpoint(apiEndpoint.value)
-		} catch (e) {
-			endpointError.value = messageOf(e)
-			return
+		if (apiEndpoint.value !== savedEndpoint.value) {
+			try {
+				const settings = await saveEndpoint(apiEndpoint.value)
+				// show the normalized value (for example without a trailing slash)
+				apiEndpoint.value = settings.apiEndpoint
+				savedEndpoint.value = settings.apiEndpoint
+			} catch (e) {
+				endpointError.value = messageOf(e)
+				return
+			}
 		}
 
 		if (apiKey.value.trim() !== '') {
@@ -91,7 +102,7 @@ async function onSave() {
 			<NcButton
 				data-test="save"
 				variant="primary"
-				:disabled="saving"
+				:disabled="saving || !loaded"
 				@click="onSave">
 				{{ t('orostelco', 'Save') }}
 			</NcButton>

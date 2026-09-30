@@ -65,6 +65,10 @@ final readonly class ConfigService {
 			return '';
 		}
 
+		if (filter_var($endpoint, FILTER_VALIDATE_URL) === false) {
+			throw new InvalidArgumentException('The API endpoint must be a valid URL.');
+		}
+
 		$parts = parse_url($endpoint);
 		if ($parts === false || !isset($parts['scheme'], $parts['host'])) {
 			throw new InvalidArgumentException('The API endpoint must be an absolute URL.');

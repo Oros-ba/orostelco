@@ -108,4 +108,11 @@ final class SettingsControllerTest extends TestCase {
 
 		$this->assertCount(1, $attributes);
 	}
+
+	public function testChangingTheEndpointRequiresPasswordConfirmation(): void {
+		$attributes = (new ReflectionMethod(SettingsController::class, 'setEndpoint'))
+			->getAttributes(PasswordConfirmationRequired::class);
+
+		$this->assertCount(1, $attributes);
+	}
 }

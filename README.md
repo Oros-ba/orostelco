@@ -44,9 +44,9 @@ occ app:enable orostelco
 Open **Administration settings -> Orostelco** and fill in
 
 - **OrosTelco API endpoint**: absolute `https` URL of the API, for example `https://api.example.com`.
-  Plain `http` is only accepted for `localhost`. Leave it empty to clear the setting.
+  Plain `http` is only accepted for `localhost` (and Nextcloud only calls local addresses when `allow_local_remote_servers` is enabled). Leave it empty to clear the setting.
 - **OrosTelco API key**: stored encrypted in the Nextcloud database, never shown again and never returned by the
-  API. Leave the field empty to keep the current key. Saving a new key asks for your password.
+  API. Leave the field empty to keep the current key. Changing the endpoint or the key asks for your password.
 
 Both settings are **per instance**: one endpoint and one key shared by all users, changeable by administrators only.
 
@@ -65,7 +65,7 @@ The `occ` route skips the validation of the admin page, so double check the endp
 |---|---|---|
 | `GET /ping` | any logged in user | Returns `pong` and the server time (UTC). Rate limited to 30 requests per minute and user. |
 | `GET /settings` | administrators | Current endpoint and whether a key is set. |
-| `PUT /settings/endpoint` | administrators | Set the endpoint (`apiEndpoint`). |
+| `PUT /settings/endpoint` | administrators | Set the endpoint (`apiEndpoint`), password confirmation required in the browser. |
 | `PUT /settings/key` | administrators | Set the API key (`apiKey`), password confirmation required in the browser. |
 
 ```bash

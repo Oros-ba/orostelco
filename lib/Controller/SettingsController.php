@@ -47,7 +47,7 @@ final class SettingsController extends OCSController {
 	}
 
 	/**
-	 * Set the OrosTelco API endpoint
+	 * Set the OrosTelco API endpoint (requires password confirmation)
 	 *
 	 * @param string $apiEndpoint absolute https URL (http only for localhost); empty clears it
 	 * @return DataResponse<Http::STATUS_OK, array{apiEndpoint: string, apiKeySet: bool}, array{}>|DataResponse<Http::STATUS_BAD_REQUEST, array{message: string}, array{}>
@@ -55,6 +55,7 @@ final class SettingsController extends OCSController {
 	 * 200: Endpoint saved
 	 * 400: Invalid endpoint
 	 */
+	#[PasswordConfirmationRequired]
 	#[ApiRoute(verb: 'PUT', url: '/settings/endpoint')]
 	public function setEndpoint(string $apiEndpoint): DataResponse {
 		try {

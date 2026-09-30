@@ -32,12 +32,12 @@ describe('api', () => {
 		await expect(getSettings()).resolves.toEqual({ apiEndpoint: 'https://a.example', apiKeySet: true })
 	})
 
-	it('saves the endpoint without asking for a password', async () => {
+	it('asks for the password before saving the endpoint', async () => {
 		vi.mocked(axios.put).mockResolvedValue(ocs({ apiEndpoint: 'https://a.example', apiKeySet: false }))
 
 		await saveEndpoint('https://a.example')
 
-		expect(confirmPassword).not.toHaveBeenCalled()
+		expect(confirmPassword).toHaveBeenCalledTimes(1)
 		expect(axios.put).toHaveBeenCalledWith(
 			'/ocs/v2.php/apps/orostelco/settings/endpoint',
 			{ apiEndpoint: 'https://a.example' },

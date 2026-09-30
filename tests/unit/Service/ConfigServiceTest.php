@@ -58,6 +58,7 @@ final class ConfigServiceTest extends TestCase {
 		yield 'credentials in url' => ['https://user:pass@api.example.com'];
 		yield 'query string' => ['https://api.example.com?x=1'];
 		yield 'fragment' => ['https://api.example.com#top'];
+		yield 'invalid host' => ['https://exa mple.com'];
 	}
 
 	#[DataProvider('invalidEndpoints')]
