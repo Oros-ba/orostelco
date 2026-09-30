@@ -98,6 +98,7 @@ Also add `.editorconfig`.
 - Open question: `/ping` does not use the stored API endpoint/key in this issue; it only proves the frontend-backend round trip. A follow-up can make it probe the OrosTelco API.
 
 ### 5. Settings: OrosTelco API endpoint and API key
+Both settings are **instance-wide** (one endpoint and one key shared by all users, admin-managed).
 Storage (`OCP\AppFramework\Services\IAppConfig`, app-scoped):
 - `api_endpoint` (string, non-sensitive, non-lazy).
 - `api_key` (string, **`sensitive: true`** so it is encrypted at rest and masked in `occ config:list`).
@@ -213,7 +214,7 @@ Rewrite `README.md` to describe the app:
 ## Risks / open questions
 - NC 35 availability and the exact PHP/Node/`@nextcloud/vue` versions for NC 33-35 must be confirmed upstream; template pins are for reference only.
 - Whether `/ping` should later test connectivity to the configured OrosTelco API.
-- Whether the API key should be per-instance (admin) only, or also per-user later.
+- Decided: the API endpoint and API key are **per instance**, configured by admins only (app-level `IAppConfig`, no per-user settings, no personal settings page). Per-user keys are out of scope.
 - App id/namespace (`orostelco` / `Orostelco`) should be confirmed final before first release.
 - docker-dev details (service names for stable containers, `ADDITIONAL_APPS_PATH`, hostnames, Windows/WSL2 behaviour, whether a `stable35`/master container matches NC 35) were only partly confirmed from its docs and must be verified by actually running the setup before the README is finalised.
 - docker-dev is explicitly insecure (default passwords); README must say it is for local development only.
