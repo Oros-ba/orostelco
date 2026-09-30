@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * SPDX-FileCopyrightText: 2026 Mirza Abazovic
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+namespace OCA\Orostelco\Settings;
+
+use OCA\Orostelco\AppInfo\Application;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\Settings\ISettings;
+
+/**
+ * @psalm-suppress UnusedClass
+ */
+final class Admin implements ISettings {
+	#[\Override]
+	public function getForm(): TemplateResponse {
+		return new TemplateResponse(Application::APP_ID, 'settings/admin', [], '');
+	}
+
+	#[\Override]
+	public function getSection(): string {
+		return Application::APP_ID;
+	}
+
+	#[\Override]
+	public function getPriority(): int {
+		return 10;
+	}
+}
