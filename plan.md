@@ -150,7 +150,42 @@ Licensing/meta:
 - NC 35 may only exist as `master`; mark that job allowed-to-fail until a stable branch exists.
 - Reuse the official Nextcloud workflow templates (`nextcloud/.github`) where possible.
 
-### 9. README update
+### 9. Local development environment (standard Nextcloud way)
+Use the official **`nextcloud/nextcloud-docker-dev`** environment (recommended by the Nextcloud developer
+manual; the manual alternative is a hand-installed server git checkout, which we do not document). The app repo
+stays standalone and is mounted into a dev Nextcloud; no Nextcloud server code lives in this repo.
+
+Developer flow to implement and document (verify each command against the current docker-dev docs while writing):
+1. Prerequisites: Git, Docker with Compose v2, Node/npm (version from `.nvmrc`), PHP + Composer (for lint/tests on host; optional since they can also run in the container).
+   On Windows: use WSL2 (clone everything inside the WSL filesystem, not `C:\`) for speed and file-watch support.
+2. Clone the dev environment and bootstrap it:
+   ```
+   git clone https://github.com/nextcloud/nextcloud-docker-dev
+   cd nextcloud-docker-dev && ./bootstrap.sh
+   ```
+3. Clone **this app** into the dev server's extra-apps folder so it is mounted into the container:
+   `nextcloud-docker-dev/workspace/server/apps-extra/orostelco`
+   (alternative for several stable versions: clone elsewhere and point `ADDITIONAL_APPS_PATH` in docker-dev's `.env` at the parent folder, so one checkout serves all containers).
+4. Add the hostname to the hosts file (`nextcloud.local`, plus `stable33.local` etc. for other versions) as described in the docker-dev hostname docs.
+5. Start and log in: `docker compose up -d nextcloud` -> http://nextcloud.local, user `admin` / password `admin` (dev only, insecure by design).
+6. Build the frontend and enable the app:
+   ```
+   cd apps-extra/orostelco && composer install && npm ci && npm run build
+   docker compose exec nextcloud occ app:enable orostelco
+   ```
+7. Edit loop: `npm run watch` (Vite rebuilds on change, reload the browser); PHP changes are live via the mount. Dev mode is on in docker-dev (`debug => true`), so stack traces and non-minified assets appear.
+8. Test against each supported version: use docker-dev's stable containers (git worktree of `stable33`, `stable34`; `master` = 35) as described in its "stable versions" docs, e.g. `docker compose up -d stable33` -> http://stable33.local, and run `occ app:enable orostelco` there.
+9. Run quality checks and tests: `make lint`, `make test`, or the individual composer/npm scripts from step 7; PHPUnit can run inside the container (`docker compose exec nextcloud` in the app folder) to use the real server.
+10. Debugging and logs: Xdebug (docker-dev "tools" docs, configure IDE to the container), logs via `docker compose exec nextcloud tail -f data/nextcloud.log`, `occ log:tail`.
+11. Reset: `docker compose down -v` wipes the dev instance.
+
+Repo additions to support this:
+- `Makefile` targets: `make dev-build` (composer + npm build), `make dev-enable` (prints/runs the `occ app:enable`), `make watch`.
+- `.nvmrc`, `.editorconfig`, and `composer.json`/`package.json` scripts already listed in step 7 so a fresh clone works after `composer install && npm ci`.
+- Optional `scripts/dev-setup.sh` that checks prerequisites (docker, node version from `.nvmrc`, composer) and prints the next steps; no secrets and no hard-coded paths.
+- Optional `.devcontainer`/VS Code tasks are out of scope.
+
+### 10. README update
 Rewrite `README.md` to describe the app:
 - What Orostelco is: a Nextcloud GUI for telecommunications OSS/BSS applications, current status.
 - Feature list: main page with Ping button, admin settings.
@@ -158,7 +193,8 @@ Rewrite `README.md` to describe the app:
 - **Installation**: from app store (when released) / manual (`apps/` or `custom_apps/`, `occ app:enable orostelco`).
 - **Configuration**: Administration settings -> Orostelco: *OrosTelco API endpoint* and *OrosTelco API key* (stored encrypted), plus the `occ` alternative.
 - **API**: `GET /ocs/v2.php/apps/orostelco/ping` example with `curl`, link to `openapi.json`.
-- **Development**: `npm ci && npm run build`, `composer install`, lint/test commands, how to run against a Docker `nextcloud:33` dev instance.
+- **Development (getting started for a new developer)**: a copy-pasteable walkthrough of step 9: prerequisites (incl. WSL2 note for Windows), clone `nextcloud-docker-dev` and bootstrap, clone this app into `workspace/server/apps-extra/orostelco`, hosts entry, `docker compose up -d nextcloud`, login (`admin`/`admin`), `composer install && npm ci && npm run build`, `occ app:enable orostelco`, watch mode, testing against NC 33/34/35 containers, lint/test commands, Xdebug and logs, resetting the environment, and a short troubleshooting list (hostname not resolving, app not listed -> check mount path and `occ app:list`, stale JS -> rebuild/hard reload). Links to the docker-dev docs and the Nextcloud developer manual.
+- Project layout overview (`lib/`, `src/`, `appinfo/`, `tests/`) so a newcomer knows where things live.
 - Supported-version policy, contributing, license (AGPL-3.0-or-later).
 
 ## Acceptance criteria
@@ -171,12 +207,16 @@ Rewrite `README.md` to describe the app:
 - [ ] `composer cs:check`, `composer psalm`, `composer test:unit`, `npm run lint`, `npm run stylelint`, `npm run typecheck`, `npm test`, `npm run build`, `reuse lint` all pass locally and in CI.
 - [ ] `openapi.json` is generated and committed.
 - [ ] README describes the app, requirements, installation, configuration, API, and development.
+- [ ] A new developer can follow only the README on a clean machine (clone docker-dev, clone this repo into `apps-extra`, build, enable) and reach the working app with the Ping button at http://nextcloud.local; the walkthrough is verified once end to end before merging.
+- [ ] `make dev-build` / `make watch` work from a fresh clone.
 
 ## Risks / open questions
 - NC 35 availability and the exact PHP/Node/`@nextcloud/vue` versions for NC 33-35 must be confirmed upstream; template pins are for reference only.
 - Whether `/ping` should later test connectivity to the configured OrosTelco API.
 - Whether the API key should be per-instance (admin) only, or also per-user later.
 - App id/namespace (`orostelco` / `Orostelco`) should be confirmed final before first release.
+- docker-dev details (service names for stable containers, `ADDITIONAL_APPS_PATH`, hostnames, Windows/WSL2 behaviour, whether a `stable35`/master container matches NC 35) were only partly confirmed from its docs and must be verified by actually running the setup before the README is finalised.
+- docker-dev is explicitly insecure (default passwords); README must say it is for local development only.
 
 ## Suggested commits
 1. `chore: gitignore AI tooling, editorconfig`
@@ -187,4 +227,5 @@ Rewrite `README.md` to describe the app:
 6. `feat: Vue frontend with ping button`
 7. `chore: php-cs-fixer, psalm, rector, eslint, stylelint, reuse`
 8. `ci: lint, test and compatibility matrix workflows`
-9. `docs: README, CHANGELOG`
+9. `chore: Makefile dev targets and dev-setup script`
+10. `docs: README (app description, local development guide), CHANGELOG`
