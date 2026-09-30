@@ -1,0 +1,39 @@
+# IDE
+/.idea/
+/*.iml
+/.vscode/
+
+# PHP dependencies and caches
+/vendor/
+/vendor-bin/*/vendor/
+/.php-cs-fixer.cache
+/tests/.phpunit.cache
+/.phpunit.result.cache
+
+# Node dependencies and caches
+/node_modules/
+/.eslintcache
+/coverage/
+
+# Build output
+/js/
+/css/
+/build/
+*.tar.gz
+
+# AI tooling (never commit)
+.omc/
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.aider*
+.continue/
+.codex/
+.gemini/
+.serena/
+.playwright-mcp/
+.github/copilot-instructions.md
+CLAUDE.md
+AGENTS.md
+GEMINI.md

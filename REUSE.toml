@@ -1,0 +1,10 @@
+version = 1
+SPDX-PackageName = "orostelco"
+SPDX-PackageSupplier = "Mirza Abazovic"
+SPDX-PackageDownloadLocation = "https://github.com/Oros-ba/orostelco"
+
+[[annotations]]
+path = ["package.json", "package-lock.json", "composer.json", "composer.lock", "vendor-bin/**/composer.json", "vendor-bin/**/composer.lock", "tsconfig.json", "openapi*.json", ".nvmrc", ".gitignore", ".gitattributes", "img/*.svg", "plan.md", "README.md", "LICENSE"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Mirza Abazovic"
+SPDX-License-Identifier = "AGPL-3.0-or-later"

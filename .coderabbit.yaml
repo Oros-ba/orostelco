@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Mirza Abazovic
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Keep CodeRabbit quiet: no automatic reviews. Comment `@coderabbitai review` on a PR to request one.
+reviews:
+  auto_review:
+    enabled: false
+  review_status: false
+  high_level_summary: false
+  poem: false
