@@ -137,7 +137,7 @@ JS/Vue/CSS (`package.json` scripts):
 - `npm run typecheck` (`vue-tsc --noEmit`), `npm run test` (vitest), `npm run build`.
 
 Licensing/meta:
-- SPDX headers (`SPDX-FileCopyrightText`, `SPDX-License-Identifier: AGPL-3.0-or-later`) on all sources, `REUSE.toml`, `reuse lint` in CI.
+- SPDX headers (copyright text and AGPL-3.0-or-later license identifier tags) on all sources, `REUSE.toml`, `reuse lint` in CI.
 - `CHANGELOG.md` (keep-a-changelog), `CODE_OF_CONDUCT.md`.
 - Optional: pre-commit hook (lint-staged) running cs-fixer/eslint on staged files.
 
