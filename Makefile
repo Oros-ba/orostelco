@@ -57,9 +57,11 @@ test:
 dev-enable:
 	cd $(DOCKER_DEV_DIR) && docker compose exec $(DOCKER_DEV_SERVICE) occ app:enable $(app_name)
 
-appstore: clean build
+appstore:
+	$(MAKE) clean
+	$(MAKE) build
 	mkdir -p $(appstore_dir)/$(app_name)
-	cp -r appinfo img js l10n lib templates vendor CHANGELOG.md LICENSE README.md openapi.json $(appstore_dir)/$(app_name)/ 2>/dev/null || true
+	cp -r appinfo css img js l10n lib templates vendor CHANGELOG.md LICENSE README.md openapi.json $(appstore_dir)/$(app_name)/ 2>/dev/null || true
 	tar -czf $(appstore_dir)/$(app_name).tar.gz -C $(appstore_dir) $(app_name)
 
 clean:

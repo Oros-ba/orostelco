@@ -8,4 +8,4 @@
 This project follows the [Nextcloud Community Code of Conduct](https://nextcloud.com/contribute/code-of-conduct/).
 
 In short: be respectful and constructive, assume good intentions, and keep discussions focused on the work.
-Unacceptable behaviour can be reported to the maintainers through the contact details in the [README](README.md) or by opening a confidential report with the repository owners on GitHub.
+Unacceptable behaviour can be reported privately to the maintainers: open the repository's [Security tab](https://github.com/Oros-ba/orostelco/security) and choose "Report a vulnerability". This creates a confidential advisory that only the maintainers can see. Please do not report conduct issues in public issues or pull requests.
