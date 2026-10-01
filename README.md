@@ -15,6 +15,7 @@ Licence: AGPL-3.0-or-later.
 - **Administration settings** (Administration settings -> Orostelco) for the instance wide
   **OrosTelco API endpoint** and **OrosTelco API key**.
 - REST endpoint `GET /ocs/v2.php/apps/orostelco/ping` (see [API](#api)).
+- **Languages**: English and German (see [Languages](#languages)).
 
 ## Requirements
 
@@ -63,7 +64,7 @@ The `occ` route skips the validation of the admin page, so double check the endp
 
 | Method and path (below `/ocs/v2.php/apps/orostelco`) | Who | Purpose |
 |---|---|---|
-| `GET /ping` | any logged in user | Returns `pong` and the server time (UTC). Rate limited to 30 requests per minute and user. |
+| `GET /ping` | any logged in user | Returns `pong` (German: `Ping`) and the server time (UTC), in the language of the `Accept-Language` header, which is also returned as `Content-Language`. Every call is logged in `orostelco_log_api`. Rate limited to 30 requests per minute and user. |
 | `GET /settings` | administrators | Current endpoint and whether a key is set. |
 | `PUT /settings/endpoint` | administrators | Set the endpoint (`apiEndpoint`), password confirmation required in the browser. |
 | `PUT /settings/key` | administrators | Set the API key (`apiKey`), password confirmation required in the browser. |
@@ -75,6 +76,23 @@ curl -u USER:PASSWORD -H 'OCS-APIRequest: true' -H 'Accept: application/json' ht
 
 The OpenAPI description is generated from the controllers: [`openapi.json`](openapi.json) (public endpoints),
 [`openapi-administration.json`](openapi-administration.json) and [`openapi-full.json`](openapi-full.json).
+
+## Languages
+
+The app is available in English (source language) and German. When a Nextcloud user selects German
+(Personal settings -> Language) the page label and the button (**Klingeln**) are shown in German.
+The frontend sends the user language in the `Accept-Language` header of every API call and `/ping`
+answers in that language (`Content-Language` response header; English if the language is not available).
+
+To add a language, add `l10n/<code>.js` and `l10n/<code>.json` (copy `de.*`) with the translated strings,
+including `pong`, the answer of `/ping`.
+
+### Ping log
+
+Each call to `/ping` is stored in the table `orostelco_log_api` (`oc_orostelco_log_api` with the default
+table prefix) with the UTC time (`called_at`) and the answer language (`language`). Neither user nor IP is stored.
+The table is created by a migration when the app is enabled or upgraded (`occ app:upgrade orostelco`).
+Rows are not deleted automatically.
 
 ## Development
 
@@ -253,8 +271,11 @@ appinfo/            info.xml (metadata, navigation, settings registration)
 lib/                PHP backend (namespace OCA\Orostelco)
   AppInfo/          Application bootstrap
   Controller/       PageController, PingController, SettingsController
-  Service/          ConfigService (endpoint and key, validation)
+  Db/               LogApi entity and mapper (ping call log)
+  Migration/        Database migrations
+  Service/          ConfigService (endpoint and key, validation), LanguageService (Accept-Language)
   Settings/         Admin settings and section
+l10n/               Translations (de)
 templates/          PHP templates that mount the Vue apps
 src/                Vue 3 frontend (main.ts, adminSettings.ts, components, services)
 img/                Icons

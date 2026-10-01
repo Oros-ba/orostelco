@@ -9,7 +9,7 @@
 	<name>Orostelco</name>
 	<summary>Telco OSS/BSS</summary>
 	<description>Orostelco is a GUI for telco OSS/BSS applications</description>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<licence>AGPL-3.0-or-later</licence>
 	<author homepage="https://github.com/mirzaAbazovic">Mirza Abazovic</author>
 	<namespace>Orostelco</namespace>

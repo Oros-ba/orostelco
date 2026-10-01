@@ -4,11 +4,13 @@
  */
 
 import axios from '@nextcloud/axios'
+import { getLanguage } from '@nextcloud/l10n'
 import { confirmPassword } from '@nextcloud/password-confirmation'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getSettings, ping, saveEndpoint, saveKey } from './api.ts'
 
 vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(), put: vi.fn() } }))
+vi.mock('@nextcloud/l10n', () => ({ getLanguage: vi.fn().mockReturnValue('en') }))
 vi.mock('@nextcloud/password-confirmation', () => ({ confirmPassword: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('@nextcloud/router', () => ({ generateOcsUrl: (path: string) => '/ocs/v2.php/' + path }))
 
@@ -24,6 +26,32 @@ describe('api', () => {
 
 		await expect(ping()).resolves.toEqual({ message: 'pong', time: 'now' })
 		expect(axios.get).toHaveBeenCalledWith('/ocs/v2.php/apps/orostelco/ping', expect.anything())
+	})
+
+	it.each([
+		['en', 'en'],
+		['de', 'de'],
+		['de_DE', 'de-DE'],
+	])('sends the user language %s as Accept-Language %s', async (language, header) => {
+		vi.mocked(getLanguage).mockReturnValue(language)
+		vi.mocked(axios.get).mockResolvedValue(ocs({ message: 'pong', time: 'now' }))
+
+		await ping()
+
+		expect(axios.get).toHaveBeenCalledWith(expect.anything(), {
+			headers: expect.objectContaining({ 'Accept-Language': header }),
+		})
+	})
+
+	it('sends the language on write calls too', async () => {
+		vi.mocked(getLanguage).mockReturnValue('de')
+		vi.mocked(axios.put).mockResolvedValue(ocs({ apiEndpoint: '', apiKeySet: true }))
+
+		await saveKey('secret')
+
+		expect(axios.put).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+			headers: expect.objectContaining({ 'Accept-Language': 'de' }),
+		})
 	})
 
 	it('reads the settings', async () => {

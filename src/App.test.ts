@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+import { register, unregister } from '@nextcloud/l10n'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.vue'
+import deTranslations from '../l10n/de.json'
 import { ping } from './services/api.ts'
 
 vi.mock('./services/api.ts', () => ({ ping: vi.fn() }))
@@ -26,6 +28,18 @@ describe('App', () => {
 		expect(ping).toHaveBeenCalledTimes(1)
 		expect(wrapper.find('[data-test="ping-result"]').text()).toContain('pong')
 		expect(wrapper.find('[data-test="ping-result"]').text()).toContain('2026-09-30T18:00:00+00:00')
+	})
+
+	it('shows the German label and button when German translations are loaded', () => {
+		register('orostelco', deTranslations.translations)
+		try {
+			const wrapper = mount(App)
+
+			expect(wrapper.find('[data-test="ping-button"]').text()).toBe('Klingeln')
+			expect(wrapper.text()).toContain('GUI für Telco-OSS/BSS-Anwendungen.')
+		} finally {
+			unregister('orostelco')
+		}
 	})
 
 	it('shows an error when the ping fails', async () => {

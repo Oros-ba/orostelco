@@ -18,3 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Administration settings for the instance wide OrosTelco API endpoint and OrosTelco API key. The key is stored encrypted and is never returned by the API.
 - Development tooling following the Nextcloud conventions: php-cs-fixer, Psalm, Rector, PHPUnit, ESLint, stylelint, vue-tsc, Vitest, REUSE and GitHub Actions workflows.
 - Local development guide based on nextcloud-docker-dev.
+- German translation (`l10n/de`): the page label and the button (**Klingeln**) follow the Nextcloud user language.
+- The frontend sends the user language in the `Accept-Language` header of every API call.
+- `GET /ping` answers in the requested language (German: `Ping`) and returns a `Content-Language` header.
+- Table `orostelco_log_api` that logs every ping call with time and language (created by a migration, app version 0.0.2).
