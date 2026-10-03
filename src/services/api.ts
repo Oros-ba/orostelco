@@ -4,6 +4,7 @@
  */
 
 import axios from '@nextcloud/axios'
+import { getLanguage } from '@nextcloud/l10n'
 import { confirmPassword } from '@nextcloud/password-confirmation'
 import { generateOcsUrl } from '@nextcloud/router'
 
@@ -21,9 +22,16 @@ interface OcsResponse<T> {
 	ocs: { data: T }
 }
 
-const OCS_HEADERS = {
-	'OCS-APIRequest': 'true',
-	Accept: 'application/json',
+/**
+ * Headers of every OCS call, including the Nextcloud user language (e.g. "de" or "de-DE")
+ * so the backend answers in it, independent of the browser language
+ */
+function ocsHeaders(): Record<string, string> {
+	return {
+		'OCS-APIRequest': 'true',
+		Accept: 'application/json',
+		'Accept-Language': getLanguage().replace('_', '-'),
+	}
 }
 
 /**
@@ -39,7 +47,7 @@ function url(path: string): string {
  * Call the backend /ping endpoint
  */
 export async function ping(): Promise<PingResponse> {
-	const { data } = await axios.get<OcsResponse<PingResponse>>(url('/ping'), { headers: OCS_HEADERS })
+	const { data } = await axios.get<OcsResponse<PingResponse>>(url('/ping'), { headers: ocsHeaders() })
 	return data.ocs.data
 }
 
@@ -47,7 +55,7 @@ export async function ping(): Promise<PingResponse> {
  * Read the admin settings (the API key itself is never returned, only whether it is set)
  */
 export async function getSettings(): Promise<Settings> {
-	const { data } = await axios.get<OcsResponse<Settings>>(url('/settings'), { headers: OCS_HEADERS })
+	const { data } = await axios.get<OcsResponse<Settings>>(url('/settings'), { headers: ocsHeaders() })
 	return data.ocs.data
 }
 
@@ -58,7 +66,7 @@ export async function getSettings(): Promise<Settings> {
  */
 export async function saveEndpoint(apiEndpoint: string): Promise<Settings> {
 	await confirmPassword()
-	const { data } = await axios.put<OcsResponse<Settings>>(url('/settings/endpoint'), { apiEndpoint }, { headers: OCS_HEADERS })
+	const { data } = await axios.put<OcsResponse<Settings>>(url('/settings/endpoint'), { apiEndpoint }, { headers: ocsHeaders() })
 	return data.ocs.data
 }
 
@@ -69,6 +77,6 @@ export async function saveEndpoint(apiEndpoint: string): Promise<Settings> {
  */
 export async function saveKey(apiKey: string): Promise<Settings> {
 	await confirmPassword()
-	const { data } = await axios.put<OcsResponse<Settings>>(url('/settings/key'), { apiKey }, { headers: OCS_HEADERS })
+	const { data } = await axios.put<OcsResponse<Settings>>(url('/settings/key'), { apiKey }, { headers: ocsHeaders() })
 	return data.ocs.data
 }
