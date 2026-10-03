@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [0.0.1-alpha1] - 2026-10-03
+
+First public pre-release, published to the Nextcloud app store.
+
 ### Added
 
 - Nextcloud application skeleton for Nextcloud 33 to 35 (PHP 8.2 or newer).
@@ -21,4 +25,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - German translation (`l10n/de`): the page label and the button (**Klingeln**) follow the Nextcloud user language.
 - The frontend sends the user language in the `Accept-Language` header of every API call.
 - `GET /ping` answers in the requested language (German: `Ping`) and returns a `Content-Language` header.
-- Table `orostelco_log_api` that logs every ping call with time and language (created by a migration, app version 0.0.2).
+- Table `orostelco_log_api` that logs every ping call with time and language (created by a migration).
