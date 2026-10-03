@@ -22,16 +22,16 @@ Requires Nextcloud 33 to 35 and PHP 8.2 or newer.]]></description>
 	<licence>AGPL-3.0-or-later</licence>
 	<author homepage="https://github.com/mirzaAbazovic">Mirza Abazovic</author>
 	<namespace>Orostelco</namespace>
-	<category>organization</category>
-	<website>https://github.com/Oros-ba/orostelco</website>
-	<discussion>https://github.com/Oros-ba/orostelco/discussions</discussion>
-	<bugs>https://github.com/Oros-ba/orostelco/issues</bugs>
-	<repository type="git">https://github.com/Oros-ba/orostelco</repository>
 	<documentation>
 		<user>https://github.com/Oros-ba/orostelco#readme</user>
 		<admin>https://github.com/Oros-ba/orostelco#configuration</admin>
 		<developer>https://github.com/Oros-ba/orostelco#development</developer>
 	</documentation>
+	<category>organization</category>
+	<website>https://github.com/Oros-ba/orostelco</website>
+	<discussion>https://github.com/Oros-ba/orostelco/discussions</discussion>
+	<bugs>https://github.com/Oros-ba/orostelco/issues</bugs>
+	<repository type="git">https://github.com/Oros-ba/orostelco</repository>
 	<dependencies>
 		<php min-version="8.2"/>
 		<nextcloud min-version="33" max-version="35"/>
