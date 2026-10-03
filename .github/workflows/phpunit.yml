@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout server
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: nextcloud/server
           ref: ${{ matrix.server }}
@@ -38,7 +38,7 @@ jobs:
           path: server
 
       - name: Checkout app
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           path: server/apps/orostelco
@@ -51,7 +51,7 @@ jobs:
           ini-file: development
           tools: composer
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: server/apps/orostelco/.nvmrc
           cache: npm
