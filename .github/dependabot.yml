@@ -16,6 +16,20 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # The shared @nextcloud/* configs pin these majors. Remove a rule once the Nextcloud package supports the new major.
+      # vite: @nextcloud/vite-config requires ^7
+      - dependency-name: vite
+        update-types: ['version-update:semver-major']
+      # stylelint-config-recommended-vue: @nextcloud/stylelint-config requires ^1
+      - dependency-name: stylelint-config-recommended-vue
+        update-types: ['version-update:semver-major']
+      # typescript 7 breaks the vite config loading and typescript-eslint (compiler JS API changed)
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # Node 24 is the supported runtime, do not follow newer type definition majors automatically
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: composer
     directory: /
     schedule:
