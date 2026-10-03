@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 app_name = orostelco
+app_version = $(shell sed -n 's|.*<version>\(.*\)</version>.*|\1|p' appinfo/info.xml | head -n 1)
 build_dir = build
 appstore_dir = $(build_dir)/appstore
 # Location of a nextcloud-docker-dev checkout; the default fits an app cloned to
@@ -21,7 +22,7 @@ help:
 	@echo "make lint-fix     fix what the code style tools can fix"
 	@echo "make test         run PHP and JavaScript unit tests"
 	@echo "make dev-enable   enable the app in a running nextcloud-docker-dev container"
-	@echo "make appstore     create build/appstore/$(app_name).tar.gz"
+	@echo "make appstore     create build/appstore/$(app_name)-<version>.tar.gz"
 	@echo "make clean        remove build output and dependencies"
 
 build:
@@ -57,12 +58,18 @@ test:
 dev-enable:
 	cd $(DOCKER_DEV_DIR) && docker compose exec $(DOCKER_DEV_SERVICE) occ app:enable $(app_name)
 
+# The app has no PHP runtime dependencies (lib/ is autoloaded by Nextcloud), so vendor/ is not shipped.
+# The archive must contain a single top level folder named like the app id.
 appstore:
 	$(MAKE) clean
-	$(MAKE) build
+	npm ci
+	npm run build
 	mkdir -p $(appstore_dir)/$(app_name)
-	cp -r appinfo css img js l10n lib templates vendor CHANGELOG.md LICENSE README.md openapi.json $(appstore_dir)/$(app_name)/ 2>/dev/null || true
-	tar -czf $(appstore_dir)/$(app_name).tar.gz -C $(appstore_dir) $(app_name)
+	cp -r appinfo css img js l10n lib templates LICENSES CHANGELOG.md LICENSE README.md openapi.json $(appstore_dir)/$(app_name)/
+	find $(appstore_dir)/$(app_name) -name '*.map' -delete
+	tar -czf $(appstore_dir)/$(app_name)-$(app_version).tar.gz -C $(appstore_dir) $(app_name)
+	tar -tzf $(appstore_dir)/$(app_name)-$(app_version).tar.gz | grep -qx '$(app_name)/appinfo/info.xml'
+	@echo "Created $(appstore_dir)/$(app_name)-$(app_version).tar.gz"
 
 clean:
 	rm -rf $(build_dir) js css node_modules vendor vendor-bin/*/vendor

@@ -3,7 +3,7 @@
     "info": {
         "title": "orostelco",
         "version": "0.0.1",
-        "description": "Telco OSS/BSS",
+        "description": "A Nextcloud front end for telco OSS/BSS applications",
         "license": {
             "name": "AGPL-3.0-or-later"
         }

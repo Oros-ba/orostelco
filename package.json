@@ -1,6 +1,6 @@
 {
   "name": "orostelco",
-  "version": "0.0.2",
+  "version": "0.0.1-alpha1",
   "private": true,
   "description": "Nextcloud GUI for OSS/BSS applications in telecommunications",
   "license": "AGPL-3.0-or-later",
